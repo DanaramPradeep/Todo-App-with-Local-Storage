@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskly — Todo App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- ── HEADER ── -->
+    <header>
+      <div class="logo">Task<span>ly</span></div>
+      <div class="header-actions">
+        <button class="icon-btn" id="themeToggle" title="Toggle theme">🌙</button>
+        <button class="icon-btn" id="exportBtn"   title="Export JSON">📤</button>
+        <button class="icon-btn" id="importBtn"   title="Import JSON">📥</button>
+        <input  type="file" id="importFile" accept=".json" style="display:none"/>
+        <button class="icon-btn" id="clearAllBtn" title="Clear all">🗑️</button>
+      </div>
+    </header>
+
+    <!-- ── STATS BAR ── -->
+    <div class="stats-bar">
+      <div class="stat-card accent">
+        <div class="stat-num"   id="sTotal">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-num"   id="sDone">0</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-num"   id="sPending">0</div>
+        <div class="stat-label">Pending</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-num"   id="sOverdue">0</div>
+        <div class="stat-label">Overdue</div>
+      </div>
+    </div>
+
+    <!-- ── PROGRESS BAR ── -->
+    <div class="progress-wrap">
+      <div class="progress-header">
+        <span>Overall Progress</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- ── INPUT CARD ── -->
+    <div class="input-card">
+      <div class="input-row">
+        <input type="text" id="taskInput"
+               placeholder="What needs to be done? Press Enter to add…"
+               maxlength="200"/>
+        <button class="add-btn" id="addBtn">+ Add</button>
+      </div>
+      <div class="extra-row">
+        <select id="prioritySelect">
+          <option value="medium">⚡ Priority: Medium</option>
+          <option value="high">🔴 Priority: High</option>
+          <option value="low">🟢 Priority: Low</option>
+        </select>
+        <select id="categorySelect">
+          <option value="">📂 Category</option>
+          <option value="work">💼 Work</option>
+          <option value="personal">🏠 Personal</option>
+          <option value="health">💪 Health</option>
+          <option value="shopping">🛒 Shopping</option>
+          <option value="study">📚 Study</option>
+          <option value="finance">💰 Finance</option>
+        </select>
+        <input type="date" id="dueDateInput" title="Due date"/>
+        <div class="color-picker-wrap">
+          <label>Color</label>
+          <input type="color" id="colorPicker" value="#5b8dee" title="Label color"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEARCH & FILTER ── -->
+    <div class="controls">
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search tasks…"/>
+      </div>
+      <div class="filter-tabs">
+        <button class="tab active" data-filter="all">All</button>
+        <button class="tab"        data-filter="active">Active</button>
+        <button class="tab"        data-filter="done">Done</button>
+        <button class="tab"        data-filter="overdue">Overdue</button>
+        <button class="tab"        data-filter="pinned">📌 Pinned</button>
+      </div>
+    </div>
+
+    <!-- ── CATEGORY CHIPS ── -->
+    <div class="category-chips" id="categoryChips"></div>
+
+    <!-- ── TOOLBAR ── -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <span class="toolbar-label">Sort:</span>
+        <select id="sortSelect">
+          <option value="date-desc">Newest First</option>
+          <option value="date-asc">Oldest First</option>
+          <option value="priority">Priority</option>
+          <option value="alpha">A → Z</option>
+          <option value="due">Due Date</option>
+          <option value="manual">Manual Order</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:7px">
+        <button class="bulk-btn mark" id="markAllBtn">✓ Complete All</button>
+        <button class="bulk-btn"      id="clearDoneBtn">Clear Completed</button>
+      </div>
+    </div>
+
+    <!-- ── TASK LIST ── -->
+    <div id="todoList"></div>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <div class="empty-icon">✅</div>
+      <p>No tasks here! Add one above.</p>
+    </div>
+
+    <footer>Taskly — All data saved locally in your browser</footer>
+  </div><!-- /.container -->
+
+  <!-- ── EDIT MODAL ── -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2>Edit Task</h2>
+      <div class="modal-field">
+        <label>Task</label>
+        <input type="text" id="editText" placeholder="Task title" maxlength="200"/>
+      </div>
+      <div class="modal-field">
+        <label>Note / Description</label>
+        <textarea id="editNote" rows="3" placeholder="Optional note…"></textarea>
+      </div>
+      <div class="modal-field">
+        <label>Priority</label>
+        <select id="editPriority">
+          <option value="high">🔴 High</option>
+          <option value="medium">⚡ Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Category</label>
+        <select id="editCategory">
+          <option value="">No Category</option>
+          <option value="work">💼 Work</option>
+          <option value="personal">🏠 Personal</option>
+          <option value="health">💪 Health</option>
+          <option value="shopping">🛒 Shopping</option>
+          <option value="study">📚 Study</option>
+          <option value="finance">💰 Finance</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Due Date</label>
+        <input type="date" id="editDueDate"/>
+      </div>
+      <div class="modal-field">
+        <label>Label Color</label>
+        <input type="color" id="editColor"/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="editCancel">Cancel</button>
+        <button class="btn-save"   id="editSave">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOAST ── -->
+  <div id="toast"></div>
+
+  <script src="app (1).js"></script>
+</body>
+</html>
